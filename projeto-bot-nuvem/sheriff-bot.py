@@ -1,20 +1,4 @@
 import os
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import nest_asyncio
-
-class SimpleHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"ONLINE")
-    def log_message(self, format, *args):
-        pass
-
-def run_web_server():
-    port = int(os.environ.get("PORT", 10000))
-    HTTPServer(("0.0.0.0", port), SimpleHandler).serve_forever()
-import os
 import sys
 import threading
 import subprocess
@@ -55,6 +39,10 @@ def instalar_modulo(package, pip_name=None):
         except Exception as e:
             print(f"❌ Erro ao instalar via pip: {str(e)}")
 
+instalar_modulo("telegram", "python-telegram-bot")
+instalar_modulo("aiohttp")
+instalar_modulo("nest_asyncio")
+
 import asyncio
 import re
 import time
@@ -70,19 +58,18 @@ from telegram.ext import (
     ApplicationBuilder, CommandHandler, MessageHandler,
     CallbackQueryHandler, ContextTypes, ConversationHandler, filters
 )
-)
 
 # ==========================================
 # ⚙️ CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
 # ==========================================
-TOKEN = "8621320390:AAEgD-r9t1rMaUOowioEStdhGeiofHrFA-M"
+TOKEN = os.environ.get("BOT_TOKEN")
 ARQUIVO_BANCO = "lista_dns.txt"
 GRUPO_FILE = "grupo.txt"
 
 # 🔗 Link Raw do GitHub configurado corretamente
 LINK_LISTA_FIXA = "https://raw.githubusercontent.com/odirleisouzasantos-hue/fantastic-octo-fortnight/main/lista.txt.txt"
 
-ADMIN_IDS = [7033928987,1522809429]
+ADMIN_IDS = []
 GET_M3U_LINK = 0
 
 DNS_BLACKLIST = [
@@ -336,7 +323,7 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
         botao_parar = InlineKeyboardMarkup([[InlineKeyboardButton("🛑 PARAR CONSULTA", callback_data="stop_scan")]])
         
         barra_init, pct_init = gerar_barra_progresso(0, total_banco)
-       progresso_msg = await context.bot.send_message(
+        progresso_msg = await context.bot.send_message(
             chat_id=chat_id,
             text=(
                 f"🤠 *SHERIFF DETECTOR — SCAN EM CURSO...*\n"
@@ -352,41 +339,6 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
             message_thread_id=thread_id
         )
 
-        verificados = 0
-        confirmados = 0
-        
-        url_base = f"http://{dns_alvo}/get.php?username={usuario}&password={senha}"
-        
-        for i, url_candidata in enumerate(todas_dns_txt):
-            if chat_id in consultas_ativas and not consultas_ativas[chat_id]:
-                break 
-
-            try:
-                verificados += 1
-                
-                if verificados % 300 == 0 or verificados == total_banco:
-                    barra, pct = gerar_barra_progresso(verificados, total_banco)
-                    try:
-                        await context.bot.edit_message_text(
-                            chat_id=chat_id,
-                            message_id=progresso_msg.message_id,
-                            text=(
-                                f"🤠 *SHERIFF DETECTOR — SCAN EM CURSO...*\n"
-                                f"──────────────────────────────────\n"
-                                f"📊 *Status:* `[{barra}] {pct:.1f}%`\n"
-                                f"🔍 *Verificados:* `{verificados:,} / {total_banco:,}`\n".replace(',', '.') +
-                                f"🎯 *Confirmados:* `{confirmados}`\n"
-                                f"──────────────────────────────────\n"
-                                f"⚡ _Procurando por mídias e instabilidades..._"
-                            ),
-                            parse_mode='Markdown',
-                            reply_markup=botao_parar
-                        )
-                    except:
-                        pass 
-            except Exception:
-                verificados += 1
-                continue
         connector = aiohttp.TCPConnector(limit=60, ttl_dns_cache=300)
         proxima_att = time.time() + 4.0
         servidores_processados = 0
@@ -441,7 +393,6 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
                     proxima_att = time.time() + 4.0
 
         try: await progresso_msg.delete()
-            
         except: pass
         consultas_ativas.pop(chat_id, None)
 
@@ -662,52 +613,17 @@ async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.
             total = len(extrair_hosts(f.read()))
         await update.message.reply_text(f"📁 **Banco Atualizado Manualmente!**\n📊 {total:,} domínios salvos em cache.".replace(',', '.'), parse_mode="Markdown", message_thread_id=thread_id)
 
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import os
-
-# Servidor HTTP embutido para manter a porta do Render satisfeita 24h
-class SimpleHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"SHERIFF BOT WEB SERVICE ONLINE")
-    def log_message(self, format, *args):
-        pass # Silencia os logs de ping para não poluir o painel
-
-def run_web_server():
-    port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(("0.0.0.0", port), SimpleHandler)
-    server.serve_forever()
-
 def main():
     nest_asyncio.apply()
-    
-    # 1. Inicia o servidor web primeiro para abrir a porta do Render
-    threading.Thread(target=run_web_server, daemon=True).start()
-    print("🌐 Servidor Web interno rodando em segundo plano e porta aberta!")
-
-    # 2. Configura o loop de eventos de forma segura
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    # 3. Baixa a lista automática
-    loop.run_until_complete(baixar_lista_automatica(forçar=True))
-
-    # 4. Constrói a aplicação do bot
+    asyncio.get_event_loop().run_until_complete(baixar_lista_automatica(forçar=True))
     app = ApplicationBuilder().token(TOKEN).build()
 
-    # 5. Configura a conversa do dnschecker
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={GET_M3U_LINK: [MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u)]},
         fallbacks=[CommandHandler("cancelar", cancelar)]
     )
 
-    # 6. Registra todos os comandos e handlers do bot
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
@@ -716,12 +632,11 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.Document.ALL, gerenciar_atualizacao_documento))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), escutar_texto_direto))
+
     app.add_error_handler(error_handler)
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
-
-    # 7. Inicia o bot mantendo o loop ativo
-    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()
