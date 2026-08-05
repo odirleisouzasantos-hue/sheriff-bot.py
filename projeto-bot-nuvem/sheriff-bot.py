@@ -62,7 +62,7 @@ from telegram.ext import (
 import os
 
 # Cole o seu token exatamente como recebeu do @BotFather:
-TOKEN = "8621320390:AAEIA5brCGChyjSSPuWVOOloTgdMGufHV1s" 
+TOKEN = "8621320390:AAHxhXPMIoCrCJ3hNjx2wd1_KV_nQFxIqgE" 
 
 ARQUIVO_BANCO = "lista_dns.txt"
 GRUPO_FILE = "grupo.txt"
