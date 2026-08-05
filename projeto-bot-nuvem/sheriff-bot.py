@@ -596,16 +596,12 @@ async def receber_m3u(update, context):
     # OBRIGATÓRIO: Libera o bot para finalizar a instrução
     return ConversationHandler.END
 
-async def main_async():
+def main():
     if not TOKEN:
         print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada!")
         return
 
-    # 1. Inicia o servidor Web de Health Check para o Render
-    threading.Thread(target=start_health_check_server, daemon=True).start()
-    print("🌐 Servidor Web interno rodando em segundo plano!")
-
-    # 2. Constrói a aplicação do Telegram
+    # Inicia a aplicação
     app = ApplicationBuilder().token(TOKEN).build()
 
     async def post_init(application):
@@ -613,7 +609,7 @@ async def main_async():
 
     app.post_init = post_init
 
-    # 3. Configura o ConversationHandler do /dnschecker
+    # Registro do fluxo /dnschecker
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={
@@ -626,7 +622,7 @@ async def main_async():
         allow_reentry=True
     )
 
-    # 4. Registra os handlers
+    # Handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
@@ -639,12 +635,8 @@ async def main_async():
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
 
-    # 5. Loop de execução assíncrono continuo (Evita que o polling pare)
-    async with app:
-        await app.start()
-        await app.updater.start_polling(drop_pending_updates=True)
-        # Trava a execução para manter o bot ouvindo requisições
-        await asyncio.Event().wait()
+    # Método nativo da biblioteca que cuida do loop e reconexões
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
-    asyncio.run(main_async())
+    main()
