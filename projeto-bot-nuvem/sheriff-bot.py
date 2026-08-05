@@ -721,32 +721,6 @@ if __name__ == "__main__":
     
     # Inicia o bot mantendo o loop ativo sem conflitos de rede
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
-
-if __name__ == "__main__":
-    main()
-import os
-from http.server import HTTPServer, BaseHTTPRequestHandler
-import threading
-
-# Mini servidor HTTP para o Render manter o Web Service gratuito rodando
-class SimpleHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Sheriff Bot is alive!")
-
-def run_web_server():
-    port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(("0.0.0.0", port), SimpleHandler)
-    server.serve_forever()
-
-# Inicia o servidor web em segundo plano para o Render
-# Inicia o servidor web em segundo plano para o Render
-threading.Thread(target=run_web_server, daemon=True).start()
-
-# Mantém o bot do Telegram acordado rodando em loop
-if __name__ == "__main__":
-    application.run_polling()
 import os
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
