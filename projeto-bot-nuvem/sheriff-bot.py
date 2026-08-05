@@ -16,7 +16,7 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
 def start_health_check_server():
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.getenv("PORT", 8080))
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
@@ -60,10 +60,10 @@ from telegram.ext import (
 # ⚙️ CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
 # ==========================================
 import os
-# Cole o seu token real do BotFather direto entre as aspas:
-TOKEN = "8621320390:AAEIA5brCGChyjSSPuWVOOloTgdMGufHV1s"
 
-# Nomes dos arquivos ajustados conforme o seu GitHub:
+# Cole o seu token exatamente como recebeu do @BotFather:
+TOKEN = "8621320390:AAEIA5brCGChyjSSPuWVOOloTgdMGufHV1s" 
+
 ARQUIVO_BANCO = "lista_dns.txt"
 GRUPO_FILE = "grupo.txt"
 
