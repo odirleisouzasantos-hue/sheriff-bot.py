@@ -596,26 +596,16 @@ async def receber_m3u(update, context):
     # OBRIGATÓRIO: Libera o bot para finalizar a instrução
     return ConversationHandler.END
 
-async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await check_autorizacao(update, context): return
-    chat_id = update.effective_chat.id
-    _, thread_id = obter_grupo_id()
-    if chat_id in consultas_ativas:
-        consultas_ativas[chat_id] = False
-        await update.message.reply_text("🛑 Comando de parada enviado ao motor.", message_thread_id=thread_id)
-    else:
-        await update.message.reply_text("Nenhuma varredura ativa encontrada para parar.", message_thread_id=thread_id)
-
 async def main_async():
     if not TOKEN:
         print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada!")
         return
 
-    # Servidor de health check em segundo plano
+    # 1. Inicia o servidor Web de Health Check para o Render
     threading.Thread(target=start_health_check_server, daemon=True).start()
     print("🌐 Servidor Web interno rodando em segundo plano!")
 
-    # Instância do Bot
+    # 2. Constrói a aplicação do Telegram
     app = ApplicationBuilder().token(TOKEN).build()
 
     async def post_init(application):
@@ -623,7 +613,7 @@ async def main_async():
 
     app.post_init = post_init
 
-    # Registro do fluxo /dnschecker
+    # 3. Configura o ConversationHandler do /dnschecker
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={
@@ -636,7 +626,7 @@ async def main_async():
         allow_reentry=True
     )
 
-    # Handlers principais
+    # 4. Registra os handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
@@ -649,11 +639,12 @@ async def main_async():
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
 
-    # Inicializa o polling no event loop assíncrono
-    await app.initialize()
-    await app.start()
-    await app.updater.start_polling(drop_pending_updates=True)
-    await asyncio.Event().wait()
+    # 5. Loop de execução assíncrono continuo (Evita que o polling pare)
+    async with app:
+        await app.start()
+        await app.updater.start_polling(drop_pending_updates=True)
+        # Trava a execução para manter o bot ouvindo requisições
+        await asyncio.Event().wait()
 
 if __name__ == "__main__":
     asyncio.run(main_async())
