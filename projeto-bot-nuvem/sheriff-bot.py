@@ -323,7 +323,7 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
         botao_parar = InlineKeyboardMarkup([[InlineKeyboardButton("🛑 PARAR CONSULTA", callback_data="stop_scan")]])
         
         barra_init, pct_init = gerar_barra_progresso(0, total_banco)
-        progresso_msg = await context.bot.send_message(
+       progresso_msg = await context.bot.send_message(
             chat_id=chat_id,
             text=(
                 f"🤠 *SHERIFF DETECTOR — SCAN EM CURSO...*\n"
@@ -339,6 +339,41 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
             message_thread_id=thread_id
         )
 
+        verificados = 0
+        confirmados = 0
+        
+        url_base = f"http://{dns_alvo}/get.php?username={usuario}&password={senha}"
+        
+        for i, url_candidata in enumerate(todas_dns_txt):
+            if chat_id in consultas_ativas and not consultas_ativas[chat_id]:
+                break 
+
+            try:
+                verificados += 1
+                
+                if verificados % 300 == 0 or verificados == total_banco:
+                    barra, pct = gerar_barra_progresso(verificados, total_banco)
+                    try:
+                        await context.bot.edit_message_text(
+                            chat_id=chat_id,
+                            message_id=progresso_msg.message_id,
+                            text=(
+                                f"🤠 *SHERIFF DETECTOR — SCAN EM CURSO...*\n"
+                                f"──────────────────────────────────\n"
+                                f"📊 *Status:* `[{barra}] {pct:.1f}%`\n"
+                                f"🔍 *Verificados:* `{verificados:,} / {total_banco:,}`\n".replace(',', '.') +
+                                f"🎯 *Confirmados:* `{confirmados}`\n"
+                                f"──────────────────────────────────\n"
+                                f"⚡ _Procurando por mídias e instabilidades..._"
+                            ),
+                            parse_mode='Markdown',
+                            reply_markup=botao_parar
+                        )
+                    except:
+                        pass 
+            except Exception:
+                verificados += 1
+                continue
         connector = aiohttp.TCPConnector(limit=60, ttl_dns_cache=300)
         proxima_att = time.time() + 4.0
         servidores_processados = 0
@@ -393,6 +428,7 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
                     proxima_att = time.time() + 4.0
 
         try: await progresso_msg.delete()
+            
         except: pass
         consultas_ativas.pop(chat_id, None)
 
