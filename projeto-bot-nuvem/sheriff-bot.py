@@ -540,11 +540,15 @@ async def autorizar7(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def escutar_texto_direto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_autorizacao(update, context): return
     msg = update.message.text
+    chat_id = update.effective_chat.id
+
     if msg and ("." in msg or "http" in msg) and not msg.startswith("/"):
         if "get.php" in msg:
-            await update.message.reply_text("⚠️ Para testar listas M3U completas, use primeiro o comando `/dnschecker`.")
+            if chat_id not in user_timeout_tasks:
+                await update.message.reply_text("⚠️ Para testar listas M3U completas, use primeiro o comando `/dnschecker`.")
             return
-        await processar_sheriff_hibrido(msg, update.message.from_user.id, context, update.message.chat_id)
+
+        await processar_sheriff_hibrido(msg, update.message.from_user.id, context, chat_id)
 
 async def dnschecker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_autorizacao(update, context): return ConversationHandler.END
