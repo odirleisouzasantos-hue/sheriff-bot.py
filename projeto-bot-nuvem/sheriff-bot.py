@@ -724,18 +724,3 @@ if __name__ == "__main__":
 
     # Inicia o bot mantendo o loop ativo com a sua variável correta (app)
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
-import os
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-
-# Mini servidor HTTP para o Render manter o Web Service gratuito rodando
-class SimpleHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Sheriff Bot is alive!")
-
-def run_web_server():
-    port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(("0.0.0.0", port), SimpleHandler)
-    server.serve_forever()
