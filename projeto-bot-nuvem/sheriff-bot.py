@@ -667,7 +667,7 @@ def run_web_server():
 def main():
     nest_asyncio.apply()
     
-    # 1. INICIA O SERVIDOR WEB PRIMEIRO (Evita o timeout de porta do Render)
+    # 1. Inicia o servidor web primeiro para abrir a porta do Render
     threading.Thread(target=run_web_server, daemon=True).start()
     print("🌐 Servidor Web interno rodando em segundo plano e porta aberta!")
 
@@ -706,3 +706,6 @@ def main():
 
     # 7. Inicia o bot mantendo o loop ativo
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
+
+if __name__ == "__main__":
+    main()
