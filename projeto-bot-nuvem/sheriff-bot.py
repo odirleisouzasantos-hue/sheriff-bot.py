@@ -1,7 +1,10 @@
 import os
+import sys
 import threading
+import subprocess
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
+# --- SERVIDOR DE PORTA DO RENDER ---
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -12,25 +15,13 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-def run_dummy_server():
+def start_health_check_server():
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
-threading.Thread(target=run_dummy_server, daemon=True).start()
-
-# Inicia um servidor leve em segundo plano para o Render identificar a porta
+# A função acima DEVE estar declarada ANTES desta linha:
 threading.Thread(target=start_health_check_server, daemon=True).start()
-
-# Inicia o servidor em segundo plano para o Render detectar a porta
-threading.Thread(target=start_health_check_server, daemon=True).start()
-
-# Inicia o servidor falso em segundo plano para o Render
-threading.Thread(target=run_dummy_server, daemon=True).start()
-# -*- coding: utf-8 -*-
-import os
-import sys
-import subprocess
 
 # ==========================================
 # ?? SISTEMA DE AUTO-INSTALAÇÃO DE MÓDULOS
