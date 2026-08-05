@@ -627,23 +627,13 @@ async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.
         await update.message.reply_text(f"📁 **Banco Atualizado Manualmente!**\n📊 {total:,} domínios salvos em cache.".replace(',', '.'), parse_mode="Markdown", message_thread_id=thread_id)
 def main():
     if not TOKEN:
-        print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada no Render!")
+        print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada!")
+        return
 
-    # Garante que o servidor HTTP fique rodando para o Render não dar timeout
+    # Servidor de health check em segundo plano
     threading.Thread(target=start_health_check_server, daemon=True).start()
     print("🌐 Servidor Web interno rodando em segundo plano!")
 
-# Mantenha os imports no topo do arquivo (linha 1 do seu código):
-import os
-import asyncio
-import nest_asyncio
-
-# Aplica nest_asyncio no nível global do arquivo
-nest_asyncio.apply()
-
-# ... (restante do código das suas funções) ...
-
-async def main():
     # Instância do Bot
     app = ApplicationBuilder().token(TOKEN).build()
 
@@ -652,6 +642,7 @@ async def main():
 
     app.post_init = post_init
 
+    # Registro do fluxo /dnschecker
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={GET_M3U_LINK: [MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u)]},
@@ -659,6 +650,7 @@ async def main():
         allow_reentry=True
     )
 
+    # Handlers
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
@@ -671,11 +663,7 @@ async def main():
     app.add_error_handler(error_handler)
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
-    
-    async with app:
-        await app.start()
-        await app.updater.start_polling(drop_pending_updates=True)
-        await asyncio.Event().wait()
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
