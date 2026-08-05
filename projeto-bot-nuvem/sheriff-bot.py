@@ -577,7 +577,7 @@ async def dnschecker(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def receber_m3u(update, context):
     texto = update.message.text or ""
     
-    # Se você enviar como arquivo .m3u ou .txt
+    # Se a lista for enviada como arquivo (.m3u ou .txt)
     if update.message.document:
         doc = await update.message.document.get_file()
         conteudo = await doc.download_as_bytearray()
@@ -589,16 +589,16 @@ async def receber_m3u(update, context):
 
     await update.message.reply_text("🔎 **Lista recebida! Iniciando a varredura dos DNS...**\nAguarde o relatório final.")
 
-    # Dispara o teste da lista em segundo plano
+    # Dispara a varredura sem travar a execução
     asyncio.create_task(executar_varredura_dns(update, context, texto))
 
-    # Libera o bot do comando
+    # OBRIGATÓRIO: Libera o bot para finalizar a instrução
     return ConversationHandler.END
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_autorizacao(update, context): return
     chat_id = update.effective_chat.id
-    _, thread_id = obter_grupo_id()
+   _, thread_id = obter_grupo_id()
     if chat_id in consultas_ativas:
         consultas_ativas[chat_id] = False
         await update.message.reply_text("🛑 Comando de parada enviado ao motor.", message_thread_id=thread_id)
