@@ -1,4 +1,20 @@
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import nest_asyncio
+
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ONLINE")
+    def log_message(self, format, *args):
+        pass
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    HTTPServer(("0.0.0.0", port), SimpleHandler).serve_forever()
+import os
 import sys
 import threading
 import subprocess
