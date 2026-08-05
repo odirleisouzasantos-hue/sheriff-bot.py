@@ -740,8 +740,9 @@ def run_web_server():
     server = HTTPServer(("0.0.0.0", port), SimpleHandler)
     server.serve_forever()
 
-# Inicia o servidor web em segundo plano
+# Inicia o servidor web em segundo plano para o Render
 threading.Thread(target=run_web_server, daemon=True).start()
-# Exemplo do comando que mantém o bot acordado esperando mensagens:
+
+# Mantém o bot do Telegram acordado rodando em loop
 if __name__ == "__main__":
     application.run_polling()
