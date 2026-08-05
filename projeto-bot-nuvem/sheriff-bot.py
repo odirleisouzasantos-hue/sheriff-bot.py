@@ -59,9 +59,12 @@ from telegram.ext import (
 # ==========================================
 # ⚙️ CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
 # ==========================================
-# FORMA CORRETA:
+import os
+# Cole o seu token real do BotFather direto entre as aspas:
 TOKEN = "8621320390:AAEIA5brCGChyjSSPuWVOOloTgdMGufHV1s"
-ARQUIVO_BANCO = "dns.txt"
+
+# Nomes dos arquivos ajustados conforme o seu GitHub:
+ARQUIVO_BANCO = "lista_dns.txt"
 GRUPO_FILE = "grupo.txt"
 
 # 🔗 Link Raw do GitHub configurado corretamente
