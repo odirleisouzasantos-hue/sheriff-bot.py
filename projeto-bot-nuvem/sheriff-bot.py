@@ -20,14 +20,11 @@ def start_health_check_server():
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
-# --- 2. INICIA O SERVIDOR (A função acima já está criada, então não dá erro) ---
+# --- 2. INICIA O SERVIDOR HTTP ---
 threading.Thread(target=start_health_check_server, daemon=True).start()
 
-# --- 3. CONFIGURAÇÃO DO TOKEN ---
-TOKEN = os.environ.get("BOT_TOKEN")
-
 # ==========================================
-# ?? SISTEMA DE AUTO-INSTALAÇÃO DE MÓDULOS
+# 📦 SISTEMA DE AUTO-INSTALAÇÃO DE MÓDULOS
 # ==========================================
 def instalar_modulo(package, pip_name=None):
     if pip_name is None:
@@ -35,12 +32,12 @@ def instalar_modulo(package, pip_name=None):
     try:
         __import__(package)
     except ImportError:
-        print(f"?? O módulo '{package}' não está instalado. Instalando '{pip_name}' automaticamente...")
+        print(f"🔄 O módulo '{package}' não está instalado. Instalando '{pip_name}' automaticamente...")
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name])
-            print(f"? '{pip_name}' instalado com sucesso!")
+            print(f"✅ '{pip_name}' instalado com sucesso!")
         except Exception as e:
-            print(f"? Erro ao instalar via pip: {str(e)}")
+            print(f"❌ Erro ao instalar via pip: {str(e)}")
 
 instalar_modulo("telegram", "python-telegram-bot")
 instalar_modulo("aiohttp")
@@ -63,13 +60,13 @@ from telegram.ext import (
 )
 
 # ==========================================
-# ??? CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
+# ⚙️ CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
 # ==========================================
-TOKEN = "8621320390:AAEgD-r9t1rMaUOowioEStdhGeiofHrFA-M"
+TOKEN = os.environ.get("8621320390:AAEgD-r9t1rMaUOowioEStdhGeiofHrFA-M")
 ARQUIVO_BANCO = "lista_dns.txt"
 GRUPO_FILE = "grupo.txt"
 
-# ?? Link Raw do GitHub configurado corretamente
+# 🔗 Link Raw do GitHub configurado corretamente
 LINK_LISTA_FIXA = "https://raw.githubusercontent.com/odirleisouzasantos-hue/fantastic-octo-fortnight/main/lista.txt.txt"
 
 ADMIN_IDS = [7033928987,1522809429]
@@ -80,7 +77,7 @@ DNS_BLACKLIST = [
     "www.brothersplay.com"
 ]
 
-# ??? Blacklist de domínios curingas/genéricos que respondem falso positivo
+# 🚫 Blacklist de domínios curingas/genéricos que respondem falso positivo
 DOMINIOS_CURINGAS = [
     "adultiptv.net",
     "iptvxxx.net",
@@ -96,21 +93,21 @@ consultas_ativas = {}
 user_timeout_tasks = {}
 
 # ==========================================
-# ?? PERSISTÊNCIA DE CONFIGURAÇÃO DO GRUPO
+# 💾 PERSISTÊNCIA DE CONFIGURAÇÃO DO GRUPO
 # ==========================================
 def salvar_grupo_id(chat_id, thread_id=None):
-    with open(GRUPO_FILE, "w") as f:
+    with open(GRUPO_FILE, "w", encoding="utf-8") as f:
         f.write(f"{chat_id}:{thread_id or ''}")
 
 def obter_grupo_id():
     if os.path.exists(GRUPO_FILE):
-        with open(GRUPO_FILE, "r") as f:
+        with open(GRUPO_FILE, "r", encoding="utf-8") as f:
             dados = f.read().strip().split(":")
             return int(dados[0]), int(dados[1]) if len(dados) > 1 and dados[1] else None
     return None, None
 
 # ==========================================
-# ?? SISTEMA DE PERMISSÕES
+# 🔐 SISTEMA DE PERMISSÕES
 # ==========================================
 async def check_autorizacao(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
     chat = update.effective_chat
@@ -134,11 +131,11 @@ async def check_autorizacao(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     return False
 
 # ==========================================
-# ??? MOTOR DE SINCRONIZAÇÃO HÍBRIDO (GITHUB + LOCAL)
+# 🔄 MOTOR DE SINCRONIZAÇÃO HÍBRIDO (GITHUB + LOCAL)
 # ==========================================
 async def baixar_lista_automatica(forçar=False):
     if LINK_LISTA_FIXA and "COLE_O_LINK" not in LINK_LISTA_FIXA:
-        print("?? Baixando banco de dados limpo do servidor remoto (GitHub)...")
+        print("🔄 Baixando banco de dados limpo do servidor remoto (GitHub)...")
         try:
             headers_github = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
             async with aiohttp.ClientSession() as session:
@@ -149,18 +146,18 @@ async def baixar_lista_automatica(forçar=False):
                             f.write(conteudo)
 
                         total_extraido = len(extrair_hosts(conteudo))
-                        print(f"? Banco de dados sincronizado com sucesso! Total: {total_extraido}")
+                        print(f"✅ Banco de dados sincronizado com sucesso! Total: {total_extraido}")
                         return True
         except Exception as e:
-            print(f"?? Falha ao baixar lista remota do GitHub: {str(e)}")
+            print(f"❌ Falha ao baixar lista remota do GitHub: {str(e)}")
 
     if os.path.exists(ARQUIVO_BANCO):
         with open(ARQUIVO_BANCO, "r", encoding="utf-8", errors="ignore") as f:
             total_local = len(extrair_hosts(f.read()))
-        print(f"?? Usando banco de dados local da pasta (`{ARQUIVO_BANCO}`). Total: {total_local}")
+        print(f"🔄 Usando banco de dados local da pasta (`{ARQUIVO_BANCO}`). Total: {total_local}")
         return True
     else:
-        print(f"? Erro crítico: Nenhum banco de dados local ou remoto encontrado.")
+        print(f"❌ Erro crítico: Nenhum banco de dados local ou remoto encontrado.")
         with open(ARQUIVO_BANCO, "w", encoding="utf-8") as f:
             f.write("")
         return False
@@ -181,7 +178,7 @@ def extrair_hosts(texto):
         return []
 
 # ==========================================
-# ?? MOTOR DE EXTRAÇÃO E CHECAGEM COM PING (V15.5)
+# ⚡ MOTOR DE EXTRAÇÃO E CHECAGEM COM PING (V15.5)
 # ==========================================
 async def testar_url_completo(session, url_banco, user, password):
     url_base = f"http://{url_banco}/player_api.php?username={user}&password={password}"
@@ -254,7 +251,17 @@ async def testar_url_completo(session, url_banco, user, password):
         return {"dns": url_banco, "valido": False, "tv": 0, "ping": 9999}
 
 # ==========================================
-# ?? PROCESSAMENTO HÍBRIDO E MONTAGEM DA V15.5
+# 📊 AUXILIARES DE FORMATAÇÃO E LAYOUT
+# ==========================================
+def gerar_barra_progresso(atual, total, tamanho=10):
+    porcentagem = (atual / total) * 100 if total > 0 else 0
+    preenchido = int(tamanho * (atual / total)) if total > 0 else 0
+    vazio = tamanho - preenchido
+    barra = "▓" * preenchido + "░" * vazio
+    return barra, porcentagem
+
+# ==========================================
+# 🤠 PROCESSAMENTO HÍBRIDO E MONTAGEM DA V15.5
 # ==========================================
 async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
     inicio = time.time()
@@ -265,7 +272,7 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
     if not os.path.exists(ARQUIVO_BANCO):
         sucesso = await baixar_lista_automatica(forçar=True)
         if not (sucesso or os.path.exists(ARQUIVO_BANCO)):
-            await context.bot.send_message(chat_id=chat_id, text="? ERR: O banco de dados de servidores está inacessível.", message_thread_id=thread_id)
+            await context.bot.send_message(chat_id=chat_id, text="❌ ERR: O banco de dados de servidores está inacessível.", message_thread_id=thread_id)
             return
 
     with open(ARQUIVO_BANCO, "r", encoding="utf-8", errors="ignore") as f:
@@ -307,16 +314,27 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
             usuario = query_params['username'][0]
             senha = query_params['password'][0]
         except:
-            await context.bot.send_message(chat_id=chat_id, text="? Falha ao quebrar parâmetros da URL M3U.", message_thread_id=thread_id)
+            await context.bot.send_message(chat_id=chat_id, text="❌ Falha ao quebrar parâmetros da URL M3U.", message_thread_id=thread_id)
             return
 
         dados_conta["user"] = usuario
         dados_conta["pass"] = senha
 
-        botao_parar = InlineKeyboardMarkup([[InlineKeyboardButton("?? PARAR CONSULTA", callback_data="stop_scan")]])
+        botao_parar = InlineKeyboardMarkup([[InlineKeyboardButton("🛑 PARAR CONSULTA", callback_data="stop_scan")]])
+        
+        barra_init, pct_init = gerar_barra_progresso(0, total_banco)
         progresso_msg = await context.bot.send_message(
             chat_id=chat_id,
-            text=f"?? **SHERIFF V15.5: INTEGRANDO E FILTRANDO ROTAS...**\n\n`¦¦¦¦¦¦¦¦¦¦ 0%`\n?? Verificados: `0/{total_banco}`\n?? Confirmados: `0`",
+            text=(
+                f"🤠 *SHERIFF DETECTOR — SCAN EM CURSO...*\n"
+                f"──────────────────────────────────\n"
+                f"📊 *Status:* `[{barra_init}] {pct_init:.1f}%`\n"
+                f"🔍 *Verificados:* `0 / {total_banco:,}`\n".replace(',', '.') +
+                f"🎯 *Confirmados:* `0`\n"
+                f"──────────────────────────────────\n"
+                f"⚡ _Procurando por mídias e instabilidades..._"
+            ),
+            parse_mode='Markdown',
             reply_markup=botao_parar,
             message_thread_id=thread_id
         )
@@ -358,14 +376,17 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
                                     dados_conta["vence"] = res.get("vencimento", "N/A")
 
                 if time.time() >= proxima_att:
-                    percentual = int((servidores_processados / total_banco) * 100)
-                    blocos = int(percentual / 10)
-                    barra = "¦" * blocos + "¦" * (10 - blocos)
+                    barra_loop, pct_loop = gerar_barra_progresso(servidores_processados, total_banco)
                     try:
                         await progresso_msg.edit_text(
-                            f"?? ??SHERIFF SCAN EM CURSO...??\n\n`{barra} {percentual}%`\n"
-                            f"?? Verificados: `{servidores_processados}/{total_banco}`\n"
-                            f"?? Confirmados: `{len(espelhos_de_ouro)}`",
+                            f"🤠 *SHERIFF DETECTOR — SCAN EM CURSO...*\n"
+                            f"──────────────────────────────────\n"
+                            f"📊 *Status:* `[{barra_loop}] {pct_loop:.1f}%`\n"
+                            f"🔍 *Verificados:* `{servidores_processados:,} / {total_banco:,}`\n".replace(',', '.') +
+                            f"🎯 *Confirmados:* `{len(espelhos_de_ouro)}`\n"
+                            f"──────────────────────────────────\n"
+                            f"⚡ _Procurando por mídias e instabilidades..._",
+                            parse_mode='Markdown',
                             reply_markup=botao_parar
                         )
                     except: pass
@@ -376,40 +397,42 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
         consultas_ativas.pop(chat_id, None)
 
         total_confirmados = len(espelhos_de_ouro)
-        
         if status_dns_alvo == "OFF" and total_confirmados > 0:
             status_dns_alvo = "ON"
 
-        latencia = round((time.time() - inicio), 3)
-        indicador_status = "(?? ONLINE)" if status_dns_alvo == "ON" else "(?? OFFLINE)"
+        latencia = round((time.time() - inicio), 2)
+        indicador_status = "(🟢 ONLINE)" if status_dns_alvo == "ON" else "(🔴 OFFLINE)"
 
-        # ? Ordena os espelhos encontrados por menor latência (Ping)
+        # Ordena os espelhos encontrados por menor latência (Ping)
         espelhos_de_ouro.sort(key=lambda x: x["ping"])
 
+        barra_fim, pct_fim = gerar_barra_progresso(servidores_processados, total_banco)
+
         relatorio = [
-            f"?? **SHERIFF DETECTOR V15.5 SMART FILTER**",
-            f"--------------------",
-            f"?? REQUISITANTE: `{user_id}`",
-            f"?? DATA/HORA: `{dt_hr}`",
-            f"--------------------",
-            f"?? DNS ALVO: `{dns_alvo}` {indicador_status}",
-            f"?? IP: `{dados_rede['ip']}`",
-            f"?? ISP: `{dados_rede['isp']}` | ?? `{dados_rede['pais']}`",
-            f"--------------------",
-            f"?? USUÁRIO: `{dados_conta['user']}` | ?? SENHA: `{dados_conta['pass']}`",
-            f"? VENCIMENTO: `{dados_conta['vence']}`",
-            f"?? TELA ONLINE: `{dados_conta['ativas']}/{dados_conta['max']}` conexões",
-            f"--------------------",
-            f"?? ESPELHOS DE OURO CONFIRMADOS ({total_confirmados}):",
-            f"?? Ordenados por menor latência de resposta.",
-            f"--------------------"
+            "🤠 *SHERIFF DETECTOR V15.5 SMART FILTER*",
+            "──────────────────────────────────",
+            f"👤 *REQUISITANTE:* `{user_id}`",
+            f"📅 *DATA/HORA:* `{dt_hr}`",
+            f"📊 *STATUS:* `[{barra_fim}] {pct_fim:.1f}%` (`{servidores_processados:,}/{total_banco:,}`)".replace(',', '.'),
+            "──────────────────────────────────",
+            f"🌐 *DNS ALVO:* `{dns_alvo}` {indicador_status}",
+            f"📡 *IP:* `{dados_rede['ip']}`",
+            f"🏢 *ISP:* `{dados_rede['isp']}` | 🇨🇦 `{dados_rede['pais']}`",
+            "──────────────────────────────────",
+            f"🔑 *USUÁRIO:* `{dados_conta['user']}` | 🔒 *SENHA:* `{dados_conta['pass']}`",
+            f"⏳ *VENCIMENTO:* `{dados_conta['vence']}`",
+            f"📺 *TELA ONLINE:* `{dados_conta['ativas']}/{dados_conta['max']}` conexões",
+            "──────────────────────────────────",
+            f"⭐ *ESPELHOS DE OURO CONFIRMADOS ({total_confirmados}):*",
+            "📌 _Ordenados por menor latência de resposta._",
+            "──────────────────────────────────"
         ]
 
         if total_confirmados > 0:
             for item in espelhos_de_ouro[:40]:
-                relatorio.append(f" +?? `{item['dns']}` ?? ?? ?? LIBERADA (`? {item['ping']}ms`)")
+                relatorio.append(f" ⚡ `{item['dns']}` — 🟢 *LIBERADA* (`⚡ {item['ping']}ms`)")
         else:
-            relatorio.append(" ? Nenhum espelho válido com canais ativos respondeu para este login.")
+            relatorio.append(" ⚠️ _Nenhum espelho válido com canais ativos respondeu para este login._")
 
     else:
         status_dns_alvo = "OFF"
@@ -434,48 +457,50 @@ async def processar_sheriff_hibrido(dados_entrada, user_id, context, chat_id):
                 lista_texto.append(dns_banco)
 
         total_encontradas = len(lista_texto)
-        latencia = round((time.time() - inicio), 3)
-        indicador_status = "(?? ONLINE)" if status_dns_alvo == "ON" else "(?? OFFLINE)"
+        latencia = round((time.time() - inicio), 2)
+        indicador_status = "(🟢 ONLINE)" if status_dns_alvo == "ON" else "(🔴 OFFLINE)"
 
         relatorio = [
-            f"?? **SHERIFF DETECTOR V15.5 SMART FILTER**",
-            f"--------------------",
-            f"?? DNS ALVO: `{dns_alvo}` {indicador_status}",
-            f"?? IP: `{dados_rede['ip']}`",
-            f"?? ISP: `{dados_rede['isp']}` | ?? `{dados_rede['pais']}`",
-            f"--------------------"
+            "🤠 *SHERIFF DETECTOR V15.5 SMART FILTER*",
+            "──────────────────────────────────",
+            f"🌐 *DNS ALVO:* `{dns_alvo}` {indicador_status}",
+            f"📡 *IP:* `{dados_rede['ip']}`",
+            f"🏢 *ISP:* `{dados_rede['isp']}` | 🇨🇦 `{dados_rede['pais']}`",
+            "──────────────────────────────────"
         ]
 
         if total_encontradas > 0:
-            relatorio.append(f"?? PARALELAS POR PROXIMIDADE DE TEXTO ({total_encontradas}):")
+            relatorio.append(f"📌 *PARALELAS POR PROXIMIDADE DE TEXTO ({total_encontradas}):*")
             for dns_item in lista_texto[:40]:
-                relatorio.append(f" +?? `{dns_item}`")
+                relatorio.append(f" ⚡ `{dns_item}`")
         else:
-            relatorio.append("?? Nenhuma similaridade de texto encontrada no banco para este prefixo.")
+            relatorio.append("⚠️ _Nenhuma similaridade de texto encontrada no banco para este prefixo._")
 
-    relatorio.append(f"--------------------")
-    relatorio.append(f"?? TEMPO DE VOO: `{latencia}s` | ?? BANCO TOTAL: `{total_banco}` sites")
+    relatorio.append("──────────────────────────────────")
+    relatorio.append(f"⏱ *TEMPO DE VOO:* `{latencia}s` | 📊 *BANCO TOTAL:* `{total_banco:,}` sites".replace(',', '.'))
 
-    await context.bot.send_message(chat_id=chat_id, text="\n".join(relatorio), parse_mode='Markdown', message_thread_id=thread_id)
+    texto_final = "\n".join(relatorio)
+    await context.bot.send_message(chat_id=chat_id, text=texto_final, parse_mode='Markdown', message_thread_id=thread_id)
 
 # ==========================================
-# ?? CAPTURADOR DE ERROS GLOBAL (ANTI-CRASH)
+# 🛑 CAPTURADOR DE ERROS GLOBAL (ANTI-CRASH)
 # ==========================================
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
-    print(f"?? Ocorreu um erro interno de conexão capturado: {context.error}")
+    print(f"❌ Ocorreu um erro interno de conexão capturado: {context.error}")
 
 # ==========================================
-# ?? INTERFACE DE COMANDOS DO TELEGRAM
+# 📱 INTERFACE DE COMANDOS DO TELEGRAM
 # ==========================================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     thread_id = update.message.message_thread_id if hasattr(update.message, "message_thread_id") else None
     salvar_grupo_id(chat.id, thread_id)
     await update.message.reply_text(
-        "??? **SHERIFF DETECTOR V15.5 SMART FILTER OPERANTE**\n\n"
+        "🤠 *SHERIFF DETECTOR V15.5 SMART FILTER OPERANTE*\n\n"
         "• Envie um **domínio limpo** para verificar aproximação por texto.\n"
         "• Use o comando `/ping` para checar a resposta e latência do bot.\n"
         "• Use o comando `/dnschecker` para rodar a varredura inteligente que filtra e traz Canais, VODs e Séries unificados.",
+        parse_mode="Markdown",
         message_thread_id=thread_id if thread_id else None
     )
 
@@ -484,7 +509,7 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     thread_id = update.message.message_thread_id if hasattr(update.message, "message_thread_id") else None
 
     inicio_lat = time.time()
-    msg = await update.message.reply_text("?? _Calculando latência..._", parse_mode="Markdown", message_thread_id=thread_id)
+    msg = await update.message.reply_text("⏱ _Calculando latência..._", parse_mode="Markdown", message_thread_id=thread_id)
     fim_lat = time.time()
 
     bot_ping_ms = round((fim_lat - inicio_lat) * 1000, 2)
@@ -495,12 +520,12 @@ async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_api_ms = round((api_end - api_start) * 1000, 2)
 
     relatorio_ping = (
-        f"?? *PONG! (SHERIFF STATUS)*\n"
-        f"--------------------\n"
-        f"? *Latência do Bot:* `{bot_ping_ms} ms`\n"
-        f"?? *API Telegram:* `{telegram_api_ms} ms`\n"
-        f"?? *Status:* `Operacional`\n"
-        f"--------------------"
+        f"🤠 *PONG! (SHERIFF STATUS)*\n"
+        f"──────────────────────────────────\n"
+        f"⚡ *Latência do Bot:* `{bot_ping_ms} ms`\n"
+        f"📡 *API Telegram:* `{telegram_api_ms} ms`\n"
+        f"🟢 *Status:* `Operacional`\n"
+        f"──────────────────────────────────"
     )
 
     await msg.edit_text(relatorio_ping, parse_mode="Markdown")
@@ -513,14 +538,14 @@ async def autorizar7(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if membro.status not in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER] and user.id not in ADMIN_IDS: return
     thread_id = update.message.message_thread_id if hasattr(update.message, "message_thread_id") else None
     salvar_grupo_id(chat.id, thread_id)
-    await update.message.reply_text(f"? Grupo Autorizado com Sucesso!", message_thread_id=thread_id)
+    await update.message.reply_text(f"✅ Grupo Autorizado com Sucesso!", message_thread_id=thread_id)
 
 async def escutar_texto_direto(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_autorizacao(update, context): return
     msg = update.message.text
     if msg and ("." in msg or "http" in msg) and not msg.startswith("/"):
         if "get.php" in msg:
-            await update.message.reply_text("?? Para testar listas M3U completas, use primeiro o comando `/dnschecker`.")
+            await update.message.reply_text("⚠️ Para testar listas M3U completas, use primeiro o comando `/dnschecker`.")
             return
         await processar_sheriff_hibrido(msg, update.message.from_user.id, context, update.message.chat_id)
 
@@ -530,14 +555,15 @@ async def dnschecker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     _, thread_id = obter_grupo_id()
 
     await update.message.reply_text(
-        "?? **Aguardando link M3U ativo para varredura completa...** (Envie em até 10 segundos)",
+        "⏳ *Aguardando link M3U ativo para varredura completa...* (Envie em até 10 segundos)",
+        parse_mode="Markdown",
         message_thread_id=thread_id
     )
 
     async def cancelar_timeout():
         await asyncio.sleep(10)
         if chat_id not in consultas_ativas:
-            try: await context.bot.send_message(chat_id=chat_id, text="? Tempo de envio esgotado!", message_thread_id=thread_id)
+            try: await context.bot.send_message(chat_id=chat_id, text="⚠️ Tempo de envio esgotado!", message_thread_id=thread_id)
             except: pass
 
     user_timeout_tasks[chat_id] = asyncio.create_task(cancelar_timeout())
@@ -552,7 +578,7 @@ async def receber_m3u(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     padrao = re.compile(r"http[s]?://.*get\.php\?[^ ]*username=[^&]+&password=[^&]+")
     if not padrao.search(texto):
-        await update.message.reply_text("? Link M3U Inválido ou sem parâmetros username/password.")
+        await update.message.reply_text("❌ Link M3U Inválido ou sem parâmetros username/password.")
         return GET_M3U_LINK
 
     asyncio.create_task(processar_sheriff_hibrido(texto, update.message.from_user.id, context, chat_id))
@@ -564,7 +590,7 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     _, thread_id = obter_grupo_id()
     if chat_id in consultas_ativas:
         consultas_ativas[chat_id] = False
-        await update.message.reply_text("?? Comando de parada enviado ao motor.", message_thread_id=thread_id)
+        await update.message.reply_text("🛑 Comando de parada enviado ao motor.", message_thread_id=thread_id)
     else:
         await update.message.reply_text("Nenhuma varredura ativa encontrada para parar.", message_thread_id=thread_id)
 
@@ -576,7 +602,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "stop_scan":
         if chat_id in consultas_ativas:
             consultas_ativas[chat_id] = False
-            await query.edit_message_text("?? Varredura interrompida. Aguardando finalização do lote...")
+            await query.edit_message_text("🛑 Varredura interrompida. Aguardando finalização do lote...")
 
 async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_autorizacao(update, context): return
@@ -585,7 +611,7 @@ async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.
         await (await update.message.document.get_file()).download_to_drive(ARQUIVO_BANCO)
         with open(ARQUIVO_BANCO, "r", encoding="utf-8", errors="ignore") as f:
             total = len(extrair_hosts(f.read()))
-        await update.message.reply_text(f"?? **Banco Atualizado Manualmente!**\n?? {total} domínios salvos em cache.", message_thread_id=thread_id)
+        await update.message.reply_text(f"📁 **Banco Atualizado Manualmente!**\n📊 {total:,} domínios salvos em cache.".replace(',', '.'), parse_mode="Markdown", message_thread_id=thread_id)
 
 def main():
     nest_asyncio.apply()
@@ -609,7 +635,7 @@ def main():
 
     app.add_error_handler(error_handler)
 
-    print("? SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
+    print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
