@@ -741,6 +741,7 @@ def run_web_server():
     server.serve_forever()
 
 # Inicia o servidor web em segundo plano para o Render
+# Inicia o servidor web em segundo plano para o Render
 threading.Thread(target=run_web_server, daemon=True).start()
 
 # Mantém o bot do Telegram acordado rodando em loop
