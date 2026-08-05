@@ -574,13 +574,20 @@ async def receber_m3u(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     texto = update.message.text.strip()
 
+    # Cancela o temporizador de timeout de 10s
     if chat_id in user_timeout_tasks:
         user_timeout_tasks[chat_id].cancel()
+        user_timeout_tasks.pop(chat_id, None)
 
-    padrao = re.compile(r"http[s]?://.*get\.php\?[^ ]*username=[^&]+&password=[^&]+")
-    if not padrao.search(texto):
-        await update.message.reply_text("❌ Link M3U Inválido ou sem parâmetros username/password.")
+    # Validação simples de parâmetros
+    if "username=" not in texto or "password=" not in texto:
+        await update.message.reply_text("❌ Link M3U Inválido! Certifique-se de enviar a URL completa contendo 'username=' e 'password='.")
         return GET_M3U_LINK
+
+    # Dispara o processamento
+    await update.message.reply_text("🚀 *Link recebido com sucesso! Iniciando varredura...*", parse_mode="Markdown")
+    asyncio.create_task(processar_sheriff_hibrido(texto, update.message.from_user.id, context, chat_id))
+    return ConversationHandler.END
 
     asyncio.create_task(processar_sheriff_hibrido(texto, update.message.from_user.id, context, chat_id))
     return ConversationHandler.END
