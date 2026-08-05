@@ -61,7 +61,7 @@ from telegram.ext import (
 # ==========================================
 # FORMA CORRETA:
 TOKEN = os.getenv("8621320390:AAFxKTOqPz20OKxMSrHbvzE3MX5Zn2PEQjc")
-ARQUIVO_BANCO = ""
+ARQUIVO_BANCO = "dns.txt"
 GRUPO_FILE = "grupo.txt"
 
 # 🔗 Link Raw do GitHub configurado corretamente
