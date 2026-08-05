@@ -39,10 +39,6 @@ def instalar_modulo(package, pip_name=None):
         except Exception as e:
             print(f"❌ Erro ao instalar via pip: {str(e)}")
 
-instalar_modulo("telegram", "python-telegram-bot")
-instalar_modulo("aiohttp")
-instalar_modulo("nest_asyncio")
-
 import asyncio
 import re
 import time
@@ -57,6 +53,7 @@ from telegram.constants import ChatMemberStatus
 from telegram.ext import (
     ApplicationBuilder, CommandHandler, MessageHandler,
     CallbackQueryHandler, ContextTypes, ConversationHandler, filters
+)
 )
 
 # ==========================================
