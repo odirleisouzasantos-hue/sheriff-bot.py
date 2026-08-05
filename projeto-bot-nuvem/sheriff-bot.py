@@ -41,14 +41,11 @@ def instalar_modulo(package, pip_name=None):
 
 instalar_modulo("telegram", "python-telegram-bot")
 instalar_modulo("aiohttp")
-instalar_modulo("nest_asyncio")
 
-import asyncio
 import re
 import time
 import json
 import socket
-import nest_asyncio
 import aiohttp
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse, parse_qs
@@ -614,22 +611,18 @@ async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.
         await update.message.reply_text(f"📁 **Banco Atualizado Manualmente!**\n📊 {total:,} domínios salvos em cache.".replace(',', '.'), parse_mode="Markdown", message_thread_id=thread_id)
 def main():
     if not TOKEN:
-        print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada no Render!")
-
-    # Inicia o servidor HTTP para manter a porta 10000 aberta no Render
-    threading.Thread(target=start_health_check_server, daemon=True).start()
-    print("🌐 Servidor Web interno rodando em segundo plano e porta aberta!")
+        print("❌ CRÍTICO: Variável BOT_TOKEN não configurada no Render!")
 
     # Instância do Bot
     app = ApplicationBuilder().token(TOKEN).build()
 
-    # Baixa a lista remota de forma segura na inicialização
+    # Baixa a lista remota de forma segura assim que o bot conecta
     async def post_init(application):
         await baixar_lista_automatica(forçar=True)
 
     app.post_init = post_init
 
-    # Registro de Handlers
+    # Registro dos Handlers
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={GET_M3U_LINK: [MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u)]},
