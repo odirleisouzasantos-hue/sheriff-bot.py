@@ -59,7 +59,7 @@ from telegram.ext import (
 # ==========================================
 # ⚙️ CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
 # ==========================================
-TOKEN = "8621320390:AAEbiTUA_iv84XW9HY7Lz6OlT18U6fVatXs"
+TOKEN = "8621320390:AAFxKTOqPz20OKxMSrHbvzE3MX5Zn2PEQjc"
 ARQUIVO_BANCO = ""
 GRUPO_FILE = "grupo.txt"
 
