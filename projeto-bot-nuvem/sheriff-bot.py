@@ -65,14 +65,14 @@ from telegram.ext import (
 # ==========================================
 # ??? CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
 # ==========================================
-TOKEN = "8260846706:AAHgCJO8c4TkNcGPl0G57X51Xjn78_3VMzg"
+TOKEN = "8621320390:AAEgD-r9t1rMaUOowioEStdhGeiofHrFA-M"
 ARQUIVO_BANCO = "lista_dns.txt"
 GRUPO_FILE = "grupo.txt"
 
 # ?? Link Raw do GitHub configurado corretamente
 LINK_LISTA_FIXA = "https://raw.githubusercontent.com/odirleisouzasantos-hue/fantastic-octo-fortnight/main/lista.txt.txt"
 
-ADMIN_IDS = [7033928987,1522809429 ]
+ADMIN_IDS = [7033928987,1522809429]
 GET_M3U_LINK = 0
 
 DNS_BLACKLIST = [
