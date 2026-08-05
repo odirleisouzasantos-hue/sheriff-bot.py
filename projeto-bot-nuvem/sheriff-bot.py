@@ -613,9 +613,32 @@ async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.
             total = len(extrair_hosts(f.read()))
         await update.message.reply_text(f"📁 **Banco Atualizado Manualmente!**\n📊 {total:,} domínios salvos em cache.".replace(',', '.'), parse_mode="Markdown", message_thread_id=thread_id)
 
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import os
+
+# Servidor HTTP embutido para manter a porta do Render satisfeita 24h
+class SimpleHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"SHERIFF BOT WEB SERVICE ONLINE")
+    def log_message(self, format, *args):
+        pass # Silencia os logs de ping para não poluir o painel
+
+def run_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), SimpleHandler)
+    server.serve_forever()
+
 def main():
     nest_asyncio.apply()
     
+    # Inicia o servidor web do Render em uma linha paralela (Thread)
+    server_thread = threading.Thread(target=run_server, daemon=True)
+    server_thread.start()
+    print(f"🌐 Servidor Web interno rodando em segundo plano...")
+
     # Configura o loop de eventos de forma segura para o Render
     try:
         loop = asyncio.get_event_loop()
@@ -632,6 +655,24 @@ def main():
         fallbacks=[CommandHandler("cancelar", cancelar)]
     )
 
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("ping", ping))
+    app.add_handler(CommandHandler("cancelar", cancelar))
+    app.add_handler(CommandHandler("autorizar7", autorizar7))
+    app.add_handler(conv_handler)
+    app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(MessageHandler(filters.Document.ALL, gerenciar_atualizacao_documento))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), escutar_texto_direto))
+
+    app.add_error_handler(error_handler)
+
+    print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
+    
+    # Inicia o bot mantendo o loop ativo sem conflitos de rede
+    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
+
+if __name__ == "__main__":
+    main()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
