@@ -62,7 +62,7 @@ from telegram.ext import (
 # ==========================================
 # ⚙️ CONFIGURAÇÃO DO BOT E CONTROLE PRIVADO
 # ==========================================
-TOKEN = os.environ.get("8621320390:AAEgD-r9t1rMaUOowioEStdhGeiofHrFA-M")
+TOKEN = os.environ.get"8621320390:AAEgD-r9t1rMaUOowioEStdhGeiofHrFA-M"
 ARQUIVO_BANCO = "lista_dns.txt"
 GRUPO_FILE = "grupo.txt"
 
