@@ -659,7 +659,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass # Silencia os logs de ping para não poluir o painel
 
-def run_server():
+def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(("0.0.0.0", port), SimpleHandler)
     server.serve_forever()
@@ -667,27 +667,31 @@ def run_server():
 def main():
     nest_asyncio.apply()
     
-    # Inicia o servidor web do Render em uma linha paralela (Thread)
-    server_thread = threading.Thread(target=run_server, daemon=True)
-    server_thread.start()
-    print(f"🌐 Servidor Web interno rodando em segundo plano...")
+    # 1. Inicia o servidor web do Render em segundo plano
+    threading.Thread(target=run_web_server, daemon=True).start()
+    print("🌐 Servidor Web interno rodando em segundo plano...")
 
-    # Configura o loop de eventos de forma segura para o Render
+    # 2. Configura o loop de eventos de forma segura para baixar a lista antes de iniciar
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
+    # 3. Executa a função assíncrona para baixar a lista automática
     loop.run_until_complete(baixar_lista_automatica(forçar=True))
+
+    # 4. Constrói a aplicação do bot
     app = ApplicationBuilder().token(TOKEN).build()
 
+    # 5. Configura a conversa do dnschecker
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={GET_M3U_LINK: [MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u)]},
         fallbacks=[CommandHandler("cancelar", cancelar)]
     )
 
+    # 6. Registra todos os comandos e handlers do bot
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
@@ -696,31 +700,12 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.Document.ALL, gerenciar_atualizacao_documento))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), escutar_texto_direto))
-
     app.add_error_handler(error_handler)
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
-    
-    # Inicia o bot mantendo o loop ativo sem conflitos de rede
+
+    # 7. Inicia o bot mantendo o loop ativo
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("ping", ping))
-    app.add_handler(CommandHandler("cancelar", cancelar))
-    app.add_handler(CommandHandler("autorizar7", autorizar7))
-    app.add_handler(conv_handler)
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.Document.ALL, gerenciar_atualizacao_documento))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), escutar_texto_direto))
-
-    app.add_error_handler(error_handler)
-
-   print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
-    
-    # Inicia o servidor web em segundo plano para o Render não derrubar o bot
-    threading.Thread(target=run_web_server, daemon=True).start()
-
-    # Inicia o bot mantendo o loop ativo com a sua variável correta (app)
-    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
