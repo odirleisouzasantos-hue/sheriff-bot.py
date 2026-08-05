@@ -717,9 +717,12 @@ if __name__ == "__main__":
 
     app.add_error_handler(error_handler)
 
-    print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
+   print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
     
-    # Inicia o bot mantendo o loop ativo sem conflitos de rede
+    # Inicia o servidor web em segundo plano para o Render não derrubar o bot
+    threading.Thread(target=run_web_server, daemon=True).start()
+
+    # Inicia o bot mantendo o loop ativo com a sua variável correta (app)
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 import os
 import threading
@@ -736,10 +739,3 @@ def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(("0.0.0.0", port), SimpleHandler)
     server.serve_forever()
-
-if __name__ == "__main__":
-    # Inicia o servidor web em segundo plano
-    threading.Thread(target=run_web_server, daemon=True).start()
-    
-    # Mantém o bot do Telegram rodando em loop contínuo
-    application.run_polling()
