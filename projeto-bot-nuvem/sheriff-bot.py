@@ -606,16 +606,6 @@ async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("Nenhuma varredura ativa encontrada para parar.", message_thread_id=thread_id)
 
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    chat_id = query.message.chat_id
-
-    if query.data == "stop_scan":
-        if chat_id in consultas_ativas:
-            consultas_ativas[chat_id] = False
-            await query.edit_message_text("🛑 Varredura interrompida. Aguardando finalização do lote...")
-
 async def main_async():
     if not TOKEN:
         print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada!")
@@ -646,14 +636,13 @@ async def main_async():
         allow_reentry=True
     )
 
-    # Handlers
+    # Handlers principais
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
     app.add_handler(CommandHandler("autorizar7", autorizar7))
     app.add_handler(conv_handler)
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.Document.ALL, gerenciar_atualizacao_documento))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), escutar_texto_direto))
 
     app.add_error_handler(error_handler)
