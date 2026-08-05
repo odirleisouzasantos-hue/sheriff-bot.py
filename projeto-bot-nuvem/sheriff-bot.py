@@ -4,7 +4,7 @@ import threading
 import subprocess
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# Servidor HTTP para o Render não dar timeout
+# --- 1. DEFINIÇÃO DO SERVIDOR HTTP PARA O RENDER ---
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -15,16 +15,16 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-def run_dummy_server():
+def start_health_check_server():
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
-def start_health_check_server():
-    run_dummy_server()
+# --- 2. INICIA O SERVIDOR (A função acima já está criada, então não dá erro) ---
+threading.Thread(target=start_health_check_server, daemon=True).start()
 
-# Inicia o servidor HTTP em segundo plano
-threading.Thread(target=run_dummy_server, daemon=True).start()
+# --- 3. CONFIGURAÇÃO DO TOKEN ---
+TOKEN = os.environ.get("BOT_TOKEN")
 
 # ==========================================
 # ?? SISTEMA DE AUTO-INSTALAÇÃO DE MÓDULOS
