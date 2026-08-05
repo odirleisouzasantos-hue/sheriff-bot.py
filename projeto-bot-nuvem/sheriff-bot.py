@@ -615,7 +615,15 @@ async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.
 
 def main():
     nest_asyncio.apply()
-    asyncio.get_event_loop().run_until_complete(baixar_lista_automatica(forçar=True))
+    
+    # Configura o loop de eventos de forma segura para o Render
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(baixar_lista_automatica(forçar=True))
     app = ApplicationBuilder().token(TOKEN).build()
 
     conv_handler = ConversationHandler(
@@ -636,7 +644,9 @@ def main():
     app.add_error_handler(error_handler)
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
-    app.run_polling(drop_pending_updates=True)
+    
+    # Inicia o bot mantendo o loop ativo sem conflitos de rede
+    app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
     main()
