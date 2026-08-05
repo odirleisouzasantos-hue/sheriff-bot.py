@@ -598,7 +598,7 @@ async def receber_m3u(update, context):
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_autorizacao(update, context): return
     chat_id = update.effective_chat.id
-   _, thread_id = obter_grupo_id()
+    _, thread_id = obter_grupo_id()
     if chat_id in consultas_ativas:
         consultas_ativas[chat_id] = False
         await update.message.reply_text("🛑 Comando de parada enviado ao motor.", message_thread_id=thread_id)
@@ -615,15 +615,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             consultas_ativas[chat_id] = False
             await query.edit_message_text("🛑 Varredura interrompida. Aguardando finalização do lote...")
 
-async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await check_autorizacao(update, context): return
-    _, thread_id = obter_grupo_id()
-    if update.message.document:
-        await (await update.message.document.get_file()).download_to_drive(ARQUIVO_BANCO)
-        with open(ARQUIVO_BANCO, "r", encoding="utf-8", errors="ignore") as f:
-            total = len(extrair_hosts(f.read()))
-        await update.message.reply_text(f"📁 **Banco Atualizado Manualmente!**\n📊 {total:,} domínios salvos em cache.".replace(',', '.'), parse_mode="Markdown", message_thread_id=thread_id)
-def main():
+async def main_async():
     if not TOKEN:
         print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada!")
         return
@@ -643,7 +635,12 @@ def main():
     # Registro do fluxo /dnschecker
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
-        states={GET_M3U_LINK: [MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u)]},
+        states={
+            GET_M3U_LINK: [
+                MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u),
+                MessageHandler(filters.Document.ALL, receber_m3u)
+            ]
+        },
         fallbacks=[CommandHandler("cancelar", cancelar)],
         allow_reentry=True
     )
@@ -661,7 +658,12 @@ def main():
     app.add_error_handler(error_handler)
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
-    app.run_polling(drop_pending_updates=True)
+
+    # Inicializa o polling no event loop assíncrono
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling(drop_pending_updates=True)
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main_async())
