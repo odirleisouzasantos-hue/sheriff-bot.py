@@ -630,6 +630,13 @@ def main():
     threading.Thread(target=start_health_check_server, daemon=True).start()
     print("🌐 Servidor Web interno rodando em segundo plano!")
 
+   import asyncio
+import nest_asyncio
+
+# Aplica para evitar conflitos de threads no Python 3.14
+nest_asyncio.apply()
+
+async def main():
     # Instância do Bot
     app = ApplicationBuilder().token(TOKEN).build()
 
@@ -662,7 +669,12 @@ def main():
     app.add_error_handler(error_handler)
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
-    app.run_polling(drop_pending_updates=True)
+    
+    # Inicialização assíncrona compatível com Python 3.14
+    async with app:
+        await app.start()
+        await app.updater.start_polling(drop_pending_updates=True)
+        await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
