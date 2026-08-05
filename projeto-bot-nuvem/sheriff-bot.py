@@ -574,27 +574,25 @@ async def dnschecker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_timeout_tasks[chat_id] = asyncio.create_task(cancelar_timeout())
     return GET_M3U_LINK
 
-async def receber_m3u(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    texto = update.message.text.strip()
+async def receber_m3u(update, context):
+    texto = update.message.text or ""
+    
+    # Se você enviar como arquivo .m3u ou .txt
+    if update.message.document:
+        doc = await update.message.document.get_file()
+        conteudo = await doc.download_as_bytearray()
+        texto = conteudo.decode('utf-8', errors='ignore')
 
-    if chat_id in user_timeout_tasks:
-        user_timeout_tasks[chat_id].cancel()
-        user_timeout_tasks.pop(chat_id, None)
-
-    if "username=" not in texto or "password=" not in texto:
-        await update.message.reply_text("❌ Link M3U Inválido! O link precisa ter 'username=' e 'password='.")
+    if not texto.strip():
+        await update.message.reply_text("⚠️ Envie um link M3U válido ou o arquivo da lista!")
         return GET_M3U_LINK
 
-    await update.message.reply_text("🚀 Link aceito! Iniciando varredura...")
-    asyncio.create_task(processar_sheriff_hibrido(texto, update.message.from_user.id, context, chat_id))
-    return ConversationHandler.END
-    # Dispara o processamento
-    await update.message.reply_text("🚀 *Link recebido com sucesso! Iniciando varredura...*", parse_mode="Markdown")
-    asyncio.create_task(processar_sheriff_hibrido(texto, update.message.from_user.id, context, chat_id))
-    return ConversationHandler.END
+    await update.message.reply_text("🔎 **Lista recebida! Iniciando a varredura dos DNS...**\nAguarde o relatório final.")
 
-    asyncio.create_task(processar_sheriff_hibrido(texto, update.message.from_user.id, context, chat_id))
+    # Dispara o teste da lista em segundo plano
+    asyncio.create_task(executar_varredura_dns(update, context, texto))
+
+    # Libera o bot do comando
     return ConversationHandler.END
 
 async def cancelar(update: Update, context: ContextTypes.DEFAULT_TYPE):
