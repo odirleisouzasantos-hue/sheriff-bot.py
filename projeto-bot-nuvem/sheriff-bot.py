@@ -8,12 +8,15 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b"SHERIFF BOT ONLINE")
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
+
 def start_health_check_server():
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
-# Dispara a função com o nome exatamente igual ao definido acima
 threading.Thread(target=start_health_check_server, daemon=True).start()
 
 # Dispara a porta IMEDIATAMENTE antes de qualquer download ou inicializacao
