@@ -630,23 +630,25 @@ def main():
     threading.Thread(target=start_health_check_server, daemon=True).start()
     print("🌐 Servidor Web interno rodando em segundo plano!")
 
-   import asyncio
+# Mantenha os imports no topo do arquivo (linha 1 do seu código):
+import os
+import asyncio
 import nest_asyncio
 
-# Aplica para evitar conflitos de threads no Python 3.14
+# Aplica nest_asyncio no nível global do arquivo
 nest_asyncio.apply()
+
+# ... (restante do código das suas funções) ...
 
 async def main():
     # Instância do Bot
     app = ApplicationBuilder().token(TOKEN).build()
 
-    # Baixa a lista remota de forma segura no boot do bot
     async def post_init(application):
         await baixar_lista_automatica(forçar=True)
 
     app.post_init = post_init
 
-    # Registro do fluxo /dnschecker (com permissão de reentrada)
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={GET_M3U_LINK: [MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u)]},
@@ -654,7 +656,6 @@ async def main():
         allow_reentry=True
     )
 
-    # Handlers em ordem exata de prioridade
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
@@ -662,15 +663,12 @@ async def main():
     app.add_handler(conv_handler)
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.Document.ALL, gerenciar_atualizacao_documento))
-    
-    # IMPORTANTE: Captura de texto genérico fica por último
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), escutar_texto_direto))
 
     app.add_error_handler(error_handler)
 
     print("🤠 SHERIFF DETECTOR V15.5 SMART FILTER ONLINE")
     
-    # Inicialização assíncrona compatível com Python 3.14
     async with app:
         await app.start()
         await app.updater.start_polling(drop_pending_updates=True)
