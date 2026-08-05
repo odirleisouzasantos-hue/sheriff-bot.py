@@ -622,24 +622,30 @@ async def gerenciar_atualizacao_documento(update: Update, context: ContextTypes.
         await update.message.reply_text(f"📁 **Banco Atualizado Manualmente!**\n📊 {total:,} domínios salvos em cache.".replace(',', '.'), parse_mode="Markdown", message_thread_id=thread_id)
 def main():
     if not TOKEN:
-        print("❌ CRÍTICO: Variável BOT_TOKEN não configurada no Render!")
+        print("❌ CRÍTICO: Variável BOT_TOKEN não foi configurada no Render!")
+
+    # Garante que o servidor HTTP fique rodando para o Render não dar timeout
+    threading.Thread(target=start_health_check_server, daemon=True).start()
+    print("🌐 Servidor Web interno rodando em segundo plano!")
 
     # Instância do Bot
     app = ApplicationBuilder().token(TOKEN).build()
 
-    # Baixa a lista remota de forma segura assim que o bot conecta
+    # Baixa a lista remota de forma segura no boot do bot
     async def post_init(application):
         await baixar_lista_automatica(forçar=True)
 
     app.post_init = post_init
 
-    # Registro dos Handlers
+    # Registro do fluxo /dnschecker (com permissão de reentrada)
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("dnschecker", dnschecker)],
         states={GET_M3U_LINK: [MessageHandler(filters.TEXT & (~filters.COMMAND), receber_m3u)]},
-        fallbacks=[CommandHandler("cancelar", cancelar)]
+        fallbacks=[CommandHandler("cancelar", cancelar)],
+        allow_reentry=True
     )
 
+    # Handlers em ordem exata de prioridade
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("ping", ping))
     app.add_handler(CommandHandler("cancelar", cancelar))
@@ -647,6 +653,8 @@ def main():
     app.add_handler(conv_handler)
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.Document.ALL, gerenciar_atualizacao_documento))
+    
+    # IMPORTANTE: Captura de texto genérico fica por último
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), escutar_texto_direto))
 
     app.add_error_handler(error_handler)
