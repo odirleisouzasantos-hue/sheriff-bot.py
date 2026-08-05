@@ -747,3 +747,26 @@ threading.Thread(target=run_web_server, daemon=True).start()
 # Mantém o bot do Telegram acordado rodando em loop
 if __name__ == "__main__":
     application.run_polling()
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
+import os
+
+# --- 1. DEFINIÇÃO DO SERVIDOR HTTP PARA O RENDER ---
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"SHERIFF BOT ONLINE")
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    server.serve_forever()
+
+# --- 2. INICIALIZAÇÃO EM SEGUNDO PLANO E POLL DO BOT ---
+if __name__ == "__main__":
+    # Inicia o servidor HTTP em background para o Render não derrubar o Web Service
+    threading.Thread(target=run_web_server, daemon=True).start()
+    
+    # Inicia o bot do Telegram (substitua 'application' pelo nome da sua variável se for diferente, ex: 'app')
+    application.run_polling()
