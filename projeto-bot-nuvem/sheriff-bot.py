@@ -667,18 +667,18 @@ def run_web_server():
 def main():
     nest_asyncio.apply()
     
-    # 1. Inicia o servidor web do Render em segundo plano
+    # 1. INICIA O SERVIDOR WEB PRIMEIRO (Evita o timeout de porta do Render)
     threading.Thread(target=run_web_server, daemon=True).start()
-    print("🌐 Servidor Web interno rodando em segundo plano...")
+    print("🌐 Servidor Web interno rodando em segundo plano e porta aberta!")
 
-    # 2. Configura o loop de eventos de forma segura para baixar a lista antes de iniciar
+    # 2. Configura o loop de eventos de forma segura
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    # 3. Executa a função assíncrona para baixar a lista automática
+    # 3. Baixa a lista automática
     loop.run_until_complete(baixar_lista_automatica(forçar=True))
 
     # 4. Constrói a aplicação do bot
@@ -706,6 +706,3 @@ def main():
 
     # 7. Inicia o bot mantendo o loop ativo
     app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
-
-if __name__ == "__main__":
-    main()
