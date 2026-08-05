@@ -13,6 +13,9 @@ def start_health_check_server():
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.serve_forever()
 
+# Dispara a função com o nome exatamente igual ao definido acima
+threading.Thread(target=start_health_check_server, daemon=True).start()
+
 # Dispara a porta IMEDIATAMENTE antes de qualquer download ou inicializacao
 threading.Thread(target=start_health_check_server, daemon=True).start()
 import os
