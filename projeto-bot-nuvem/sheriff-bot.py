@@ -742,3 +742,6 @@ def run_web_server():
 
 # Inicia o servidor web em segundo plano
 threading.Thread(target=run_web_server, daemon=True).start()
+# Exemplo do comando que mantém o bot acordado esperando mensagens:
+if __name__ == "__main__":
+    application.run_polling()
